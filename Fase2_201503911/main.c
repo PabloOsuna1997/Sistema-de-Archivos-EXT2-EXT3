@@ -471,7 +471,7 @@ void Analisis(char comando[500]){
                 printf("Error no hay sesion activa (Root).\n");
             }
         }else if(strcasecmp(palabra,"mkdir") == 0){
-            //printf("comando ingresado logout.\n");
+            //printexec -path="/home/osuna/Escritorio/Archivos/Primer Semestre 2019/Fase 2/EntradaF2.sh"f("comando ingresado logout.\n");
             if((strcasecmp(UsuarioLog.Usuario,"\0") != 0) && (strcasecmp(UsuarioLog.pwd,"\0") != 0) &&(strcasecmp(UsuarioLog.id,"\0") != 0)){
                 Mkdir(comando);
                 if(UsuarioLog.Tipo == 3 && Bandera_Esto_En_Recovery == false){
@@ -5516,8 +5516,7 @@ void Mkfile(char comando[500]){
             printf("Size no permitido.\n");
             return;
         }
-
-        /*if(TamaoSize != 0){
+        else {
             char contenido[TamaoSize+2];
             memset(&contenido,'\0',sizeof(contenido));
 
@@ -5537,8 +5536,9 @@ void Mkfile(char comando[500]){
             }
             char co[500];
             memset(&co,'\0',sizeof(co));
-            strcpy(CONT,contenido);
-        }*/
+
+            strcpy(CONT,contenido);    //copiamos el contenido a una arreglo auxiliar porque contenido siempre perdia la info
+        }
 
         ParametroP = false;
         SeparaRutaMkfile(PATH,CONT); //debo mandar el contenido que deberia tener el archivo con el size
@@ -5752,9 +5752,28 @@ void SepararRutaMkdir(char RUTA[250]){
             if(ParametroP){         //si el parametro o vino en el comando se crea si no error
                 aux = CrearCarpeta(aux,Pataux);
                 padre = VerificacionExisteCarpeta(aux,Pataux);
+                //if()
             }else{
-                printf("Carpeta %s no existe.\n",Pataux);
-                return;
+               if(i == 250){
+                    ParametroP = true;
+                    aux = CrearCarpeta(aux,Pataux);
+                    padre = VerificacionExisteCarpeta(aux,Pataux);
+                    ParametroP = false;
+                    //padre = VerificacionExisteCarpeta(aux,Pataux);
+                    //return;
+                }else{
+
+                    printf("Carpeta %s no existe.\n",Pataux);
+                    return;
+                }
+//                printf("Carpeta %s no existe.\n",Pataux);
+//                return;
+            }
+        }else{
+            // si padre me devuelve algun valor e i es 250 significa
+            //la carpeta ya existe por lo tanto no puede crearla
+            if(i == 250){
+                 printf("Carpeta %s YA existe.\n",Pataux);
             }
         }
         indice = 0;
