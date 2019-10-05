@@ -4123,7 +4123,7 @@ char *getFile(char comando[500],int i){
         path[3] = comando[i+3];
 
         if((strcasecmp(path, "file") == 0)){
-            i = i + 6;      //debe adelantar filen=
+            i = i + 5;      //debe adelantar file=
             while(comando[i] == ' '){
                 i++;
             }
@@ -4841,6 +4841,7 @@ void Mkfs(char comando[500]){
 
         int NumeroStruct = 0;
         SUPERBLOQUE sb;
+        strcpy(Fs,"3fs");
         if(Fs[0] == '2'){
             NumeroStruct = DespejandoN(TamaoParticion);
             NumeroStructuras = NumeroStruct;  // hacemos global el numeor de estructuras que se estaran manejando
@@ -4946,7 +4947,7 @@ void Mkfs(char comando[500]){
         CONTENTCARPETA user;
         user.b_inodo = 1;
         memset(&user.b_name,'\0',sizeof(user.b_name));
-        strcpy(user.b_name,"User.txt");
+        strcpy(user.b_name,"users.txt");
         bloqueasociado.Content[2] = user;
 
         CONTENTCARPETA vacio;
@@ -5754,7 +5755,7 @@ void SepararRutaMkdir(char RUTA[250]){
                 padre = VerificacionExisteCarpeta(aux,Pataux);
                 //if()
             }else{
-               if(i == 250){
+                if(i == 250){
                     ParametroP = true;
                     aux = CrearCarpeta(aux,Pataux);
                     padre = VerificacionExisteCarpeta(aux,Pataux);
@@ -5766,14 +5767,14 @@ void SepararRutaMkdir(char RUTA[250]){
                     printf("Carpeta %s no existe.\n",Pataux);
                     return;
                 }
-//                printf("Carpeta %s no existe.\n",Pataux);
-//                return;
+                //                printf("Carpeta %s no existe.\n",Pataux);
+                //                return;
             }
         }else{
             // si padre me devuelve algun valor e i es 250 significa
             //la carpeta ya existe por lo tanto no puede crearla
             if(i == 250){
-                 printf("Carpeta %s YA existe.\n",Pataux);
+                printf("Carpeta %s YA existe.\n",Pataux);
             }
         }
         indice = 0;
@@ -6888,6 +6889,7 @@ char *getArchivo(char PathDisco[250],int Posicion){
 
 char *BuscarArchivo(char RUTA[250]){
 
+    bool bandera = false;
     SUPERBLOQUE sb = getSB(UsuarioLog.Path,UsuarioLog.StartParticion);
 
     bool para = false;
@@ -6934,12 +6936,13 @@ char *BuscarArchivo(char RUTA[250]){
             for (int apuntador = 0; apuntador < 15; apuntador++){
                 if(padre.i_block[apuntador] != -1){
                     SUPERBLOQUE sb = getSB(UsuarioLog.Path,UsuarioLog.StartParticion);
-                    BLOQUECARPETA father = getBloqueCarpeta(sb.s_block_start + (padre.i_block[0]*sizeof(BLOQUECARPETA)));
+                    BLOQUECARPETA father = getBloqueCarpeta(sb.s_block_start + (padre.i_block[apuntador]*sizeof(BLOQUECARPETA)));
 
                     for (int bloque = 0; bloque < 4; bloque++) {
 
                         //printf("que pedo\n");
                         if(strcmp(father.Content[bloque].b_name,Pataux) ==0){
+                            bandera = true;
                             //significa que encontro el archivo en alguno de sus bloques.
                             //mandamoa a capturar el contenido del archivo.]
 
@@ -6974,6 +6977,7 @@ char *BuscarArchivo(char RUTA[250]){
                         }
 
                     }
+
                 }
             }
             return contenido;
@@ -8609,9 +8613,9 @@ void ImpresionFind(TABLAINODOS padre,int cantidadtabs,char Name[10]){
                         TABLAINODOS inodoactual = getInodo(UsuarioLog.Path,sb.s_inode_start + (bloque.Content[var1].b_inodo * sizeof(TABLAINODOS)));
 
                         if(inodoactual.i_type == '1'){
-                            if(strcasecmp(Name,"?.*") == 0){
+                            if(strcasecmp(Name,"?.*") == 0){    //buscaa archivos que tenga una letra de nombre y cualquier extension
 
-                                if(bloque.Content[var1].b_name[1] == '.'){          //la unica referencia del nombre de un archivo esta en el bloque padre
+                                if(bloque.Content[var1].b_name[1] == '.'){  //imprime texto que solo tengo una letra de nombre
                                     printf("#");
                                     for (int a = 0; a < cantidadtabs; a++) {
                                         printf(" ");
@@ -8881,6 +8885,7 @@ void Cat(char coma[500]){
             }
 
             printf("Ruta: %s\n",RUTA);
+
             int numero = coma[i+4] - 48;
             i = indc;
 
@@ -8888,6 +8893,12 @@ void Cat(char coma[500]){
             memset(&Contenido,'\0',sizeof(Contenido));
 
             char *contenido = BuscarArchivo(RUTA);
+
+            if(contenido == NULL){
+                printf("El archivo especdificado no existe.\n");
+                return;
+            }
+
             int indice1 = 0;
             while (*contenido != NULL) {
                 char letra = *contenido;
@@ -8896,8 +8907,13 @@ void Cat(char coma[500]){
                 contenido++;
             }
 
+            //ahora como solo un archivo se podra imprimir entonces filen = file y en getfile aumento i +1
+            //aademas ya no meto el contenido a la lista de tipo ARCHIVOS
 
-            ARCHIVOS *Nuevonodo = (ARCHIVOS*)malloc(sizeof(ARCHIVOS));
+            printf("# %s\n",Contenido);
+
+
+            /* ARCHIVOS *Nuevonodo = (ARCHIVOS*)malloc(sizeof(ARCHIVOS));
             strcpy(Nuevonodo->contenido,Contenido);
             Nuevonodo->numero = numero;
 
@@ -8918,7 +8934,7 @@ void Cat(char coma[500]){
                 aux2->siguiente = Nuevonodo;
             }
 
-            Nuevonodo->siguiente = aux1;
+            Nuevonodo->siguiente = aux1;*/
 
         }  else if(coma[i] == '#' ){
             //al momento de ser un numeral detectara comentario y terminara el ciclo
@@ -8927,8 +8943,8 @@ void Cat(char coma[500]){
             if(coma[i-1] == '\n'){
                 break;
             }
-            else if(coma[i] != '-' && coma[i] != ' ' && coma[i] != '\n'){
-                printf("Error en los parametros del comando file.");
+            else if(coma[i] != '-' && coma[i] != ' ' && coma[i] != '\n' && coma[i] != '\r'){
+                printf("Error en los parametros del comando cat.");
                 return;         //se sale del metodo ya que da error de parametros.
             }
         }
@@ -8936,13 +8952,13 @@ void Cat(char coma[500]){
 
     //imprimimos
 
-    ARCHIVOS *aux = primeroA;
+    /* ARCHIVOS *aux = primeroA;
     printf("\n");
     while(aux != NULL){
 
         printf("# %s\n",aux->contenido);
         aux =  aux->siguiente;
-    }
+    }*/
 
 }
 
@@ -9396,6 +9412,7 @@ void Remover(char coma[500]){
                         TABLAINODOS InodoAEliminar;
                         InodoAEliminar = getInodo(UsuarioLog.Path,sb.s_inode_start + (blo.Content[var1].b_inodo * sizeof(TABLAINODOS)));
                         EliminarTodosHijos(InodoAEliminar);
+                        printf("Se ha eliminado la carpeta %s.\n",blo.Content[var1].b_name);
 
 
                         //eliminamos inodo.
@@ -10151,7 +10168,7 @@ void Recovery(char comando[500]){
     CONTENTCARPETA user;
     user.b_inodo = 1;
     memset(&user.b_name,'\0',sizeof(user.b_name));
-    strcpy(user.b_name,"User.txt");
+    strcpy(user.b_name,"users.txt");
     bloqueasociado.Content[2] = user;
 
     CONTENTCARPETA vacio;
